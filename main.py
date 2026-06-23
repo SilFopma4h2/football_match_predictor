@@ -70,6 +70,7 @@ plot_tree(
     fontsize=12,
     impurity=False
 )
+plt.savefig("assets/tree.png")
 plt.title("Decision Tree: Home vs Away", fontsize=15)
 plt.tight_layout()
 plt.show()

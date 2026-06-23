@@ -27,10 +27,7 @@ env/
 .DS_Store
 Thumbs.db
 
-# Plot/output files (e.g. saved decision tree images)
-*.png
-*.jpg
-*.pdf
+#The plots can be pushed and commited
 
 # Logs
 *.log
