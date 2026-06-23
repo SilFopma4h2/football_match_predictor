@@ -1,6 +1,15 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.tree import DecisionTreeClassifier, plot_tree
+import os
+
+
+
+script_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.dirname(script_dir)
+output_dir = os.path.join(project_root, "assets")
+output_path = os.path.join(output_dir, "tree.png")
+
 
 # ELO per match
 y_elo_home = [8.4, 7.3, 6.8, 6, 6.5]
@@ -70,8 +79,8 @@ plot_tree(
     fontsize=12,
     impurity=False
 )
-plt.savefig("football_match_predictor/assets/tree.png")
 plt.title("Decision Tree: Home vs Away", fontsize=15)
+plt.savefig(output_path)
 plt.tight_layout()
 plt.show()
 
