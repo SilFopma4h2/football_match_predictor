@@ -1,0 +1,11 @@
+date,home_team,away_team,home_score,away_score,tournament,city,country,neutral
+2025-10-12,Netherlands,Finland,4.0,0.0,FIFA World Cup qualification,Amsterdam,Netherlands,False
+2025-11-14,Poland,Netherlands,1.0,1.0,FIFA World Cup qualification,Warsaw,Poland,False
+2025-11-17,Netherlands,Lithuania,4.0,0.0,FIFA World Cup qualification,Amsterdam,Netherlands,False
+2026-03-27,Netherlands,Norway,2.0,1.0,Friendly,Amsterdam,Netherlands,False
+2026-03-31,Netherlands,Ecuador,1.0,1.0,Friendly,Eindhoven,Netherlands,False
+2026-06-03,Netherlands,Algeria,0.0,1.0,Friendly,Rotterdam,Netherlands,False
+2026-06-08,Netherlands,Uzbekistan,2.0,1.0,Friendly,New York,United States,True
+2026-06-14,Netherlands,Japan,2.0,2.0,FIFA World Cup,Arlington,United States,True
+2026-06-20,Netherlands,Sweden,5.0,1.0,FIFA World Cup,Houston,United States,True
+2026-06-25,Tunisia,Netherlands,,,FIFA World Cup,Kansas City,United States,True
