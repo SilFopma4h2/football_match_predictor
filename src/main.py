@@ -17,7 +17,7 @@ print(r"""
                                                                            |__/                                                                                
 """)
 
-print("Welcome by the best football predictor ever!")
+print("Welcome by the best football predictor ever!!")
 print("Type help to get started.")
 print("Type 'ml' for the ML model to predict the winner.")
 print("Type 'torch' for the torch model to predict the winner.")
