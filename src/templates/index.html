@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voetbal Match Predictor</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        .container { max-width: 500px; margin: auto; padding: 20px; border: 1px solid #ccc; border-radius: 10px; }
+        select { width: 100%; padding: 8px; margin: 10px 0; } /* Styling voor de dropdown toegevoegd */
+        button { padding: 10px 15px; background-color: #28a745; color: white; border: none; cursor: pointer; margin-top: 10px;}
+        button:hover { background-color: #218838; }
+        .resultaat { margin-top: 20px; padding: 15px; background-color: #f8f9fa; border-left: 4px solid #007bff; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Voetbal Wedstrijd Voorspeller ⚽</h2>
+
+    <form method="POST">
+        <label for="thuis_team">Thuisteam:</label>
+        <select id="thuis_team" name="thuis_team" required>
+            <option value="" disabled selected>Kies een land...</option>
+            <option value="Nederland">Nederland</option>
+            <option value="Tunesië">Tunesië</option>
+        </select>
+
+        <label for="uit_team">Uitteam:</label>
+        <select id="uit_team" name="uit_team" required>
+            <option value="" disabled selected>Kies een land...</option>
+            <option value="Nederland">Nederland</option>
+            <option value="Tunesië">Tunesië</option>
+        </select>
+
+        <button type="submit">Voorspel Resultaat</button>
+    </form>
+
+    {% if voorspelling %}
+    <div class="resultaat">
+        <h3>Resultaat:</h3>
+        <p>{{ voorspelling }}</p>
+    </div>
+    {% endif %}
+</div>
+
+</body>
+</html>
