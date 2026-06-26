@@ -4,45 +4,58 @@ from sklearn.tree import DecisionTreeClassifier, plot_tree
 import os
 
 
-
 def plot_tree_ml():
+
     script_dir = os.path.dirname(os.path.abspath(__file__))
-    project_root = os.path.dirname(script_dir)
-    output_dir = os.path.join(project_root, "assets")
-    output_path = os.path.join(output_dir, "tree.png")
+    output_dir = os.path.join(script_dir, "assets")
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+    output_path = os.path.join(output_dir, "complete_tree.png")
 
-    # ELO per match
-    y_elo_home = [7.5,8.4, 7.3, 6.8, 6, 6.5]
-    y_elo_away = [7,5,7,6,7.5,7.5]
 
-    # Goals per match
-    home_goals = [3,5, 2, 2, 0, 1]
-    away_goals = [4,1,1,1,4,5]
 
-    # Averages, needed for the upcoming prediction
-    elo_mean_home = np.mean(y_elo_home)
-    elo_mean_away = np.mean(y_elo_away)
-    home_goals_mean = np.mean(home_goals)
-    away_goals_mean = np.mean(away_goals)
 
-    # Training data: combine every home match with every away match (5x5 = 25 pairs)
-    # The label is now based on a form score (ELO and goals combined), not just goals alone.
-    # This prevents the tree from predicting everything using just 1 of the 2 features.
+    y_elo_home = [7.5, 8.4, 7.3, 6.8, 6.0, 6.5]
+    y_elo_away = [7.0, 5.0, 7.0, 6.0, 7.5, 7.5]
+    home_goals = [3, 5, 2, 2, 0, 1]
+    away_goals = [4, 1, 1, 1, 4, 5]
+
+    # 2. Advanced Data for Nederland (Netherlands)
+    nl_xg = [2.45, 2.07, 1.80, 0.70, 1.40, 1.62]
+    nl_possession = [71.6, 62.1, 58.0, 52.0, 61.0, 54.0]
+    nl_passes = [601, 521, 520, 480, 610, 506]
+    nl_shots = [20, 11, 14, 9, 12, 15]
+
+    # 3. Advanced Data for Marokko (Morocco)
+    ma_xg = [2.8, 1.5, 0.9, 1.2, 2.1, 2.4]
+    ma_possession = [66.0, 53.0, 44.0, 49.0, 60.0, 62.0]
+    ma_passes = [720, 480, 390, 430, 590, 610]
+    ma_shots = [20, 12, 8, 10, 16, 18]
+
+
     X_train, y_labels = [], []
 
     for i in range(len(y_elo_home)):
         for j in range(len(y_elo_away)):
+            # Feature calculation
             elo_diff = y_elo_home[i] - y_elo_away[j]
             goals_diff = home_goals[i] - away_goals[j]
+            xg_diff = nl_xg[i] - ma_xg[j]
+            shots_diff = nl_shots[i] - ma_shots[j]
+            pos_diff = nl_possession[i] - ma_possession[j]
+            pass_diff = nl_passes[i] - ma_passes[j]
 
-            form_home = y_elo_home[i] + home_goals[i]
-            form_away = y_elo_away[j] + away_goals[j]
+            X_train.append([elo_diff, goals_diff, xg_diff, shots_diff, pos_diff, pass_diff])
 
-            X_train.append([elo_diff, goals_diff])
 
-            if form_home > form_away:
+            score_home = y_elo_home[i] + home_goals[i] + nl_xg[i] + (nl_shots[i] / 10.0) + (nl_possession[i] / 20.0) + (
+                        nl_passes[i] / 100.0)
+            score_away = y_elo_away[j] + away_goals[j] + ma_xg[j] + (ma_shots[j] / 10.0) + (ma_possession[j] / 20.0) + (
+                        ma_passes[j] / 100.0)
+
+            if score_home > score_away:
                 y_labels.append(1)  # Home wins
-            elif form_away > form_home:
+            elif score_away > score_home:
                 y_labels.append(0)  # Away wins
             else:
                 y_labels.append(2)  # Draw
@@ -50,39 +63,50 @@ def plot_tree_ml():
     X_train = np.array(X_train)
     y_labels = np.array(y_labels)
 
-    # Train the tree
-    tree_model = DecisionTreeClassifier(max_depth=3, random_state=42)
+
+    tree_model = DecisionTreeClassifier(max_depth=5, random_state=42)
     tree_model.fit(X_train, y_labels)
 
-    # Check which features the tree actually uses
-    print("Feature importance (ELO / Goals):", tree_model.feature_importances_)
 
-    # Prediction for the next match, based on the averages
-    elo_diff_new = elo_mean_home - elo_mean_away
-    goals_diff_new = home_goals_mean - away_goals_mean
+    means_home = [
+        np.mean(y_elo_home), np.mean(home_goals), np.mean(nl_xg),
+        np.mean(nl_shots), np.mean(nl_possession), np.mean(nl_passes)
+    ]
+    means_away = [
+        np.mean(y_elo_away), np.mean(away_goals), np.mean(ma_xg),
+        np.mean(ma_shots), np.mean(ma_possession), np.mean(ma_passes)
+    ]
 
-    prediction = tree_model.predict([[elo_diff_new, goals_diff_new]])
+    prediction_features = [means_home[k] - means_away[k] for k in range(6)]
+    prediction = tree_model.predict([prediction_features])
 
     label_map = {0: "Away wins", 1: "Home wins", 2: "Draw"}
-    names_in_correct_order = [label_map[c] for c in tree_model.classes_]
+    actual_classes = tree_model.classes_
+    names_in_correct_order = [label_map[c] for c in actual_classes]
 
-    print(f"\nPrediction for Home vs Away: {label_map[prediction[0]]}")
+    feature_names = ["ELO Diff", "Goals Diff", "xG Diff", "Shots Diff", "Possession Diff", "Passes Diff"]
 
-    # Plot the tree
-    plt.figure(figsize=(12, 7))
+    print("Complete Feature Importances:")
+    for name, importance in zip(feature_names, tree_model.feature_importances_):
+        print(f"{name}: {importance:.4f}")
+
+    print(f"\nFinal Complete Prediction (Home vs Away): {label_map[prediction[0]]}")
+
+    # --- VISUALIZATION ---
+    plt.figure(figsize=(20, 10))
     plot_tree(
         tree_model,
-        feature_names=["ELO Difference", "Goals Difference"],
+        feature_names=feature_names,
         class_names=names_in_correct_order,
         filled=True,
         rounded=True,
-        fontsize=12,
+        fontsize=8,
         impurity=False
     )
-    plt.title("Decision Tree: Home vs Away", fontsize=15)
-    plt.savefig(output_path)
+    plt.title("Complete Decision Tree: ELO, Goals, xG, Shots, Possession, and Passes", fontsize=15)
+    plt.savefig(output_path, dpi=300)
     plt.tight_layout()
     plt.show()
 
-
-plot_tree_ml()
+if __name__ == "__main__":
+    plot_tree_ml()

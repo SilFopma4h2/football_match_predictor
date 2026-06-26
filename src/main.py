@@ -1,4 +1,4 @@
-from torch_predictor import use_winner
+from torch_predictor import get_winner1
 from ml_predictor import get_winner
 from ml_predictor_plot import plot_tree_ml
 
@@ -32,10 +32,10 @@ while True:
         print("The winner is: ", get_winner())
 
     elif user_input == "torch":
-        print("The winner is: ", use_winner())
+        print("The winner is: ", get_winner1())
 
     elif user_input == "both":
-        res_te = use_winner()
+        res_te = get_winner1()
         res_ml = get_winner()
 
         if res_te == res_ml:
