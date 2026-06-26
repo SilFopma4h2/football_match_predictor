@@ -3,11 +3,11 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from sklearn.preprocessing import StandardScaler
+import json
+import os
 
 
-# Define the upgraded neural network model
 class FootballPredictor(nn.Module):
-    # input_size is now 6 to accommodate all features
     def __init__(self, input_size=6, hidden_size1=32, hidden_size2=16, num_classes=3, dropout_prob=0.2):
         super(FootballPredictor, self).__init__()
         self.fc1 = nn.Linear(input_size, hidden_size1)
@@ -18,130 +18,122 @@ class FootballPredictor(nn.Module):
         self.fc3 = nn.Linear(hidden_size2, num_classes)
 
     def forward(self, x):
-        out = self.relu(self.fc1(x))
-        out = self.dropout1(out)
-        out = self.relu(self.fc2(out))
-        out = self.dropout2(out)
-        out = self.fc3(out)
-        return out
+        x = self.relu(self.fc1(x))
+        x = self.dropout1(x)
+        x = self.relu(self.fc2(x))
+        x = self.dropout2(x)
+        return self.fc3(x)
 
 
 def get_winner1():
-    # Fix seeds for consistency
+
     torch.manual_seed(42)
     np.random.seed(42)
 
-    # --- COMPLETE DATA INTEGRATION ---
+    BASE_DIR = os.path.dirname(os.path.dirname(__file__))
+    json_path = os.path.join(BASE_DIR, "assets", "data", "data.json")
 
-    # 1. Original Data (ELO and Goals)
-    elo_home = [7.5, 8.4, 7.3, 6.8, 6.0, 6.5]
-    elo_away = [7.0, 5.0, 7.0, 6.0, 7.5, 7.5]
-    home_goals = [3, 5, 2, 2, 0, 1]
-    away_goals = [4, 1, 1, 1, 4, 5]
+    with open(json_path, "r") as f:
+        data = json.load(f)
 
-    # 2. Advanced Data for Nederland (Netherlands)
-    nl_xg = [2.45, 2.07, 1.80, 0.70, 1.40, 1.62]
-    nl_possession = [71.6, 62.1, 58.0, 52.0, 61.0, 54.0]
-    nl_passes = [601, 521, 520, 480, 610, 506]
-    nl_shots = [20, 11, 14, 9, 12, 15]
+    elo_home = data["elo_home"]
+    elo_away = data["elo_away"]
+    home_goals = data["home_goals"]
+    away_goals = data["away_goals"]
 
-    # 3. Advanced Data for Marokko (Morocco)
-    ma_xg = [2.8, 1.5, 0.9, 1.2, 2.1, 2.4]
-    ma_possession = [66.0, 53.0, 44.0, 49.0, 60.0, 62.0]
-    ma_passes = [720, 480, 390, 430, 590, 610]
-    ma_shots = [20, 12, 8, 10, 16, 18]
+    nl_xg = data["nl_xg"]
+    nl_possession = data["nl_possession"]
+    nl_passes = data["nl_passes"]
+    nl_shots = data["nl_shots"]
 
-    # Calculate averages for the upcoming match prediction
+    ma_xg = data["ma_xg"]
+    ma_possession = data["ma_possession"]
+    ma_passes = data["ma_passes"]
+    ma_shots = data["ma_shots"]
+
     means_home = [
         np.mean(elo_home), np.mean(home_goals), np.mean(nl_xg),
         np.mean(nl_shots), np.mean(nl_possession), np.mean(nl_passes)
     ]
+
     means_away = [
         np.mean(elo_away), np.mean(away_goals), np.mean(ma_xg),
         np.mean(ma_shots), np.mean(ma_possession), np.mean(ma_passes)
     ]
 
-    # Generate training data combinations
     X_train, y_labels = [], []
+
     for i in range(len(elo_home)):
         for j in range(len(elo_away)):
-            # Features: Differences in ELO, Goals, xG, Shots, Possession, Passes
-            diffs = [
+
+            X_train.append([
                 elo_home[i] - elo_away[j],
                 home_goals[i] - away_goals[j],
                 nl_xg[i] - ma_xg[j],
                 nl_shots[i] - ma_shots[j],
                 nl_possession[i] - ma_possession[j],
                 nl_passes[i] - ma_passes[j]
-            ]
-            X_train.append(diffs)
+            ])
 
-            # Holistic performance score for labeling
-            score_home = elo_home[i] + home_goals[i] + nl_xg[i] + (nl_shots[i] / 10.0) + (nl_possession[i] / 20.0) + (
-                        nl_passes[i] / 100.0)
-            score_away = elo_away[j] + away_goals[j] + ma_xg[j] + (ma_shots[j] / 10.0) + (ma_possession[j] / 20.0) + (
-                        ma_passes[j] / 100.0)
+            score_home = (
+                elo_home[i] + home_goals[i] + nl_xg[i] +
+                (nl_shots[i] / 10.0) + (nl_possession[i] / 20.0) +
+                (nl_passes[i] / 100.0)
+            )
+
+            score_away = (
+                elo_away[j] + away_goals[j] + ma_xg[j] +
+                (ma_shots[j] / 10.0) + (ma_possession[j] / 20.0) +
+                (ma_passes[j] / 100.0)
+            )
 
             if score_home > score_away:
-                y_labels.append(1)  # Home wins
+                y_labels.append(1)
             elif score_away > score_home:
-                y_labels.append(0)  # Away wins
+                y_labels.append(0)
             else:
-                y_labels.append(2)  # Draw
+                y_labels.append(2)
 
     X_train = np.array(X_train, dtype=np.float32)
     y_labels = np.array(y_labels, dtype=np.int64)
 
-    # Normalize the input features
     scaler = StandardScaler()
-    X_train_scaled = scaler.fit_transform(X_train)
+    X_train = scaler.fit_transform(X_train)
 
-    # Convert to PyTorch tensors
-    X_tensor = torch.from_numpy(X_train_scaled)
+    X_tensor = torch.from_numpy(X_train)
     y_tensor = torch.from_numpy(y_labels)
 
-    # Initialize model with 6 inputs and slightly larger hidden layers
-    model = FootballPredictor(input_size=6, hidden_size1=32, hidden_size2=16)
-    criterion = nn.CrossEntropyLoss()
+    model = FootballPredictor()
     optimizer = optim.Adam(model.parameters(), lr=0.01)
+    criterion = nn.CrossEntropyLoss()
 
-    # Training loop
-    num_epochs = 300  # Increased epochs for more features
-    print("Training Upgraded Neural Network...")
-    for epoch in range(num_epochs):
+    for epoch in range(300):
         model.train()
         optimizer.zero_grad()
-        outputs = model(X_tensor)
-        loss = criterion(outputs, y_tensor)
+        output = model(X_tensor)
+        loss = criterion(output, y_tensor)
         loss.backward()
         optimizer.step()
 
-        if (epoch + 1) % 50 == 0:
-            print(f"Epoch [{epoch + 1}/{num_epochs}], Loss: {loss.item():.4f}")
+    prediction_input = [
+        means_home[k] - means_away[k] for k in range(6)
+    ]
 
-    # Prepare prediction data (average differences)
-    prediction_diffs = [means_home[k] - means_away[k] for k in range(6)]
-    new_sample = np.array([prediction_diffs], dtype=np.float32)
+    prediction_input = scaler.transform([prediction_input])
+    prediction_input = torch.from_numpy(prediction_input.astype(np.float32))
 
-    # Apply normalization
-    new_sample_scaled = scaler.transform(new_sample)
-    new_data = torch.from_numpy(new_sample_scaled)
-
-    # Predict outcome
     model.eval()
     with torch.no_grad():
-        output = model(new_data)
-        probabilities = torch.softmax(output, dim=1)
-        predicted_class = torch.argmax(output, dim=1).item()
+        output = model(prediction_input)
+        probs = torch.softmax(output, dim=1)
+        pred = torch.argmax(output, dim=1).item()
 
-    # Map labels
-    label_map = {0: "Away wins (Morocco)", 1: "Home wins (Netherlands)", 2: "Draw"}
-    winner = label_map[predicted_class]
+    label_map = {0: "Away wins", 1: "Home wins", 2: "Draw"}
 
-    print(
-        f"\nProbabilities: Home: {probabilities[0][1]:.2f}, Away: {probabilities[0][0]:.2f}, Draw: {probabilities[0][2]:.2f}")
-    print(f"Prediction for Netherlands vs Morocco: {winner}")
-    return winner
+    print(f"Away: {probs[0][0]:.2f}")
+    print(f"Home: {probs[0][1]:.2f}")
+    print(f"Draw: {probs[0][2]:.2f}")
 
+    print("Prediction:", label_map[pred])
 
-
+    return label_map[pred]
