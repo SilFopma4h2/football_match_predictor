@@ -12,12 +12,12 @@ def plot_tree_ml():
     output_path = os.path.join(output_dir, "tree.png")
 
     # ELO per match
-    y_elo_home = [8.4, 7.3, 6.8, 6, 6.5]
-    y_elo_away = [6, 5, 5, 6, 6]
+    y_elo_home = [7.5,8.4, 7.3, 6.8, 6, 6.5]
+    y_elo_away = [7,5,7,6,7.5,7.5]
 
     # Goals per match
-    home_goals = [5, 2, 2, 0, 1]
-    away_goals = [0, 1, 0, 0, 0]
+    home_goals = [3,5, 2, 2, 0, 1]
+    away_goals = [4,1,1,1,4,5]
 
     # Averages, needed for the upcoming prediction
     elo_mean_home = np.mean(y_elo_home)
@@ -85,3 +85,4 @@ def plot_tree_ml():
     plt.show()
 
 
+plot_tree_ml()
