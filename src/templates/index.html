@@ -1,48 +1,54 @@
 <!DOCTYPE html>
 <html lang="nl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Voetbal Match Predictor</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 40px; }
-        .container { max-width: 500px; margin: auto; padding: 20px; border: 1px solid #ccc; border-radius: 10px; }
-        select { width: 100%; padding: 8px; margin: 10px 0; } /* Styling voor de dropdown toegevoegd */
-        button { padding: 10px 15px; background-color: #28a745; color: white; border: none; cursor: pointer; margin-top: 10px;}
-        button:hover { background-color: #218838; }
-        .resultaat { margin-top: 20px; padding: 15px; background-color: #f8f9fa; border-left: 4px solid #007bff; }
-    </style>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Marokko vs Nederland Predictor</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
 </head>
 <body>
+<main class="page">
+    <section class="card app-card">
+        <h1>⚽ Marokko vs Nederland</h1>
+        <p class="subtitle">Voorspel de winnaar met ML of PyTorch</p>
 
-<div class="container">
-    <h2>Voetbal Wedstrijd Voorspeller ⚽</h2>
+        <form method="POST" class="predict-form">
+            <div class="locked-match">
+                <p><strong>Wedstrijd:</strong> {{ home_team }} vs {{ away_team }}</p>
+                <p class="small-note">Teams staan vast en kunnen niet aangepast worden.</p>
+            </div>
 
-    <form method="POST">
-        <label for="thuis_team">Thuisteam:</label>
-        <select id="thuis_team" name="thuis_team" required>
-            <option value="" disabled selected>Kies een land...</option>
-            <option value="Nederland">Nederland</option>
-            <option value="Tunesië">Tunesië</option>
-        </select>
+            <div class="field-group">
+                <label for="model_choice">Kies model</label>
+                <select id="model_choice" name="model_choice">
+                    <option value="ml" {% if selected_model == 'ml' %}selected{% endif %}>ML Model (Decision Tree)</option>
+                    <option value="torch" {% if selected_model == 'torch' %}selected{% endif %}>PyTorch Model</option>
+                </select>
+            </div>
 
-        <label for="uit_team">Uitteam:</label>
-        <select id="uit_team" name="uit_team" required>
-            <option value="" disabled selected>Kies een land...</option>
-            <option value="Nederland">Nederland</option>
-            <option value="Tunesië">Tunesië</option>
-        </select>
+            <button type="submit" class="btn-predict">Voorspel winnaar</button>
+        </form>
+    </section>
 
-        <button type="submit">Voorspel Resultaat</button>
-    </form>
-
-    {% if voorspelling %}
-    <div class="resultaat">
-        <h3>Resultaat:</h3>
-        <p>{{ voorspelling }}</p>
-    </div>
+    {% if error %}
+    <section class="card result-card error">
+        <h2>Er ging iets mis</h2>
+        <p>{{ error }}</p>
+    </section>
     {% endif %}
-</div>
 
+    {% if prediction %}
+    <section class="card result-card success">
+        <h2>🏆 Voorspelde winnaar</h2>
+        <p class="match-line">
+            <span>{{ prediction.home_team }}</span>
+            <span class="vs">vs</span>
+            <span>{{ prediction.away_team }}</span>
+        </p>
+        <p class="winner">{{ prediction.winner }}</p>
+        <p class="model-used">Model: <strong>{{ prediction.model_label }}</strong></p>
+    </section>
+    {% endif %}
+</main>
 </body>
 </html>
